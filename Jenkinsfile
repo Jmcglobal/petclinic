@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Git Clone') {
             steps {
-                git branch: 'main', url: 'https://github.com/Jmcglobal/petclinic.git'
+                git branch: 'feature-1', url: 'https://github.com/Jmcglobal/petclinic.git'
             }
         }
         
