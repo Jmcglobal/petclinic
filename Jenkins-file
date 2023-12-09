@@ -7,7 +7,9 @@ pipeline {
     }
     
     environment {
-        SCANNER_HOME=tool 'sonar-scanner'
+        SONAR_TOKEN = credentials('sonar')
+        SONAR_URL = 'http://3.238.217.125:9000'
+        SONAR_PROJECT_KEY ='sonarqube'
     }
     
     stages{
@@ -30,16 +32,25 @@ pipeline {
             }
         }
         
-        stage("Sonarqube Analysis "){
-            steps{
-                withSonarQubeEnv('sonar-server') {
-                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Petclinic \
-                    -Dsonar.java.binaries=. \
-                    -Dsonar.projectKey=Petclinic '''
-    
+        stage('Sonarqube Analysis') {
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh '''mvn clean verify sonar:sonar \
+                    -Dsonar.projectName=Petclinic \
+                    -Dsonar.projectKey=Petclinic'''
                 }
             }
         }
+
+        // OR
+        // stage('Sonarqube Analysis') {
+        //     steps {
+        //       sh '''mvn clean verify sonar:sonar \
+        //         -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+        //         -Dsonar.host.url=${SONAR_URL} \
+        //         -Dsonar.login=${SONAR_TOKEN}'''
+        //     }
+        // }
         
         stage("OWASP Dependency Check"){
             steps{

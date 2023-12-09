@@ -188,6 +188,4 @@ HTTP ERROR 403 No valid crumb was included in the request
 
 HTTP ERROR 403 No valid crumb was included in the request
 
-116099e06719b5b12bacd6c9fe4b33d40f
-
 curl -v -X POST http://jenkins-url:8080/job/<job-name>/buildWithParameters?param=value --user Jmcglobal:116099e06719b5b12bacd6c9fe4b33d40f

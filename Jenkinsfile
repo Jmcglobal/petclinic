@@ -6,7 +6,6 @@ pipeline {
         maven 'maven3'
     }
     
-
     stages {
         stage('Git Clone') {
             steps {
@@ -25,12 +24,40 @@ pipeline {
                 sh "mvn test"
             }
         }
+
+        stage('Sonarqube Analysis') {
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh '''mvn clean verify sonar:sonar \
+                    -Dsonar.projectName=Petclinic \
+                    -Dsonar.projectKey=Petclinic'''
+                }
+            }
+        }
+
+    // OR
+        // stage('Sonarqube Analysis') {
+        //     steps {
+        //       sh '''mvn clean verify sonar:sonar \
+        //         -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+        //         -Dsonar.host.url=${SONAR_URL} \
+        //         -Dsonar.login=${SONAR_TOKEN}'''
+        //     }
+        // }
         
         stage('mvn clean package') {
             steps {
                 sh "mvn clean package"
             }
         }
+
+        stage('Dependency-Check') {
+            steps {
+                dependencyCheck additionalArguments: '--scan target/', odcInstallation: 'owasp'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+        
         
         stage('deploy to tomcat webapps folder') {
             steps {
