@@ -5,6 +5,12 @@ pipeline {
         // jdk 'jdk-11'
         maven 'maven3'
     }
+
+    environment {
+        SONAR_TOKEN = credentials('sonar')
+        SONAR_URL = 'http://3.238.217.125:9000'
+        SONAR_PROJECT_KEY ='sonarqube'
+    }
     
     stages {
         stage('Git Clone') {
@@ -57,8 +63,32 @@ pipeline {
                 dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
             }
         }
-        
-        
+        // eploy Artifacts to Nexus repository
+        stage('Nexus Repository Deploy') {
+            steps {
+                configFileProvider([configFile(fileId: 'e48fe939-a536-45fc-bcec-9a11e7e76ecb', variable: 'mavensettings')]) {
+                sh "mvn -s $mavensettings clean deploy -DskipTests=true"
+                }
+            }
+        }
+
+        stage('DOCKER BUILDS AND PUSH') {
+            steps {
+                script{
+                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        sh "docker build -t jmcglobal/petclinic ."
+                        sh " docker push jmcglobal/petclinic:latest"
+                    }
+                }
+            }
+        }
+
+        stage('DOCKER RUN COMMAND') {
+            steps {
+                sh "docker run -d --rm --name petclinic -p8082:8082 jmcglobal/petclinic"
+            }
+        }
+        // Deploy Or Copy to Tomcat server path
         stage('deploy to tomcat webapps folder') {
             steps {
                 sh "cp target/petclinic.war /opt/apache-tomcat-9.0.65/webapps/"
